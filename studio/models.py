@@ -13,3 +13,12 @@ class UserProfile(models.Model):
         return f'{self.user} Profile'
 
 
+from django.utils import timezone
+
+class LoginAttempt(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    attempts = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return f'{self.user.username} - {self.attempts} attempts at {self.timestamp}'

@@ -4,7 +4,7 @@
 {% block header %}
 <nav>
     <ul>
-        <li><a href="{% url 'main' %}">Главная</a></li>
+        <li><a href="{% url 'index' %}">Главная</a></li>
         <li><a href="{% url 'register' %}">Регистрация</a></li>
     </ul>
 </nav>
@@ -15,16 +15,55 @@
 <form method="post">
     {% csrf_token %}
     {% for f in form %}
-    <p><label class="form-label" for="{{ f.id_for_label }}">{{ f.label }}: </label>{{ f }}</p>
-    <div class="form-error">{{ f.errors }}</div>
+        <p>
+            <label class="form-label" for="{{ f.id_for_label }}">{{ f.label }}: </label>
+            {% if f.name == 'password' and is_locked %}
+                <span id="lock-message" style="color: red;">Ввод пароля заблокирован на <span id="timer"></span></span>
+                <input type="password" name="password" disabled>
+            {% else %}
+                {{ f }}
+            {% endif %}
+        </p>
+        <div class="form-error">{{ f.errors }}</div>
     {% endfor %}
 
-    {% if form.non_field_errors %}
-    <div class="form-error">
-        {{ form.non_field_errors }}
-    </div>
+    {% if login_attempts > 0 %}
+        <p>Количество неудачных попыток входа: {{ login_attempts }}</p>
     {% endif %}
 
-    <button type="submit">Войти</button>
+    <button type="submit" id="submit-button" {% if is_locked %}disabled{% endif %}>Войти</button>
 </form>
+
+<script>
+    {% if is_locked %}
+        // Установка времени блокировки
+        const blockDuration = 5; // Время блокировки в секундах
+        let timeRemaining = blockDuration;
+
+        // Функция для обновления таймера
+        function updateTimer() {
+            const timerElement = document.getElementById('timer');
+            const passwordInput = document.querySelector('input[name="password"]');
+            const lockMessage = document.getElementById('lock-message');
+            const submitButton = document.getElementById('submit-button');
+
+            if (timeRemaining > 0) {
+                const minutes = Math.floor(timeRemaining / 60);
+                const seconds = timeRemaining % 60;
+                timerElement.textContent = minutes + "m " + seconds + "s ";
+                timeRemaining--;
+            } else {
+                // Если время истекло, убираем сообщение, разблокируем поле ввода пароля и кнопку
+                lockMessage.style.display = 'none'; // Убираем сообщение о блокировке
+                passwordInput.disabled = false; // Разблокируем поле ввода пароля
+                submitButton.disabled = false; // Разблокируем кнопку "Войти"
+                clearInterval(timerInterval);
+            }
+        }
+
+        // Запускаем таймер
+        const timerInterval = setInterval(updateTimer, 1000);
+    {% endif %}
+</script>
+
 {% endblock %}
