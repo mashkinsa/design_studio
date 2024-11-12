@@ -29,7 +29,7 @@ class DesignRequest(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='design_requests')
     title = models.CharField(max_length=100)
     description = models.TextField()
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)  # Изменено на ForeignKey
     photo = models.ImageField(upload_to='design_photos/')
     created_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='new')
@@ -38,9 +38,8 @@ class DesignRequest(models.Model):
 
     def save(self, *args, **kwargs):
         # Вычисляем сложность на основе длины описания
-        self.complexity = len(self.description)
+        self.complexity = len(self.description)  # Можно использовать любую другую логику
         super().save(*args, **kwargs)
-
     def __str__(self):
         return self.title
 

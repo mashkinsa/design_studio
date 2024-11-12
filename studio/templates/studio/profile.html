@@ -7,6 +7,9 @@
         {% if user.is_authenticated %}
         <li><a href="{% url 'view_requests' %}">Посмотреть заявки</a></li>
         <li><a href="{% url 'create_request' %}">Создать заявку</a></li>
+        {% if user.is_superuser %}
+        <li><a href="{% url 'admin_design_requests' %}">АдминПанель</a></li>
+        {% endif %}
         <li><a href="{% url 'logout' %}">Выйти</a></li>
         {% else %}
         <li><a href="{% url 'register' %}">Регистрация</a></li>

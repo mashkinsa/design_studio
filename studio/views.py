@@ -19,16 +19,28 @@ def index(request):
 
 
 def main(request):
-    # Получаем 4 последние выполненные заявки
-    completed_requests = DesignRequest.objects.filter(status='completed').order_by('-created_at')[:4]
+    if not request.user.is_superuser:
+        # Получаем 4 последние выполненные заявки
+        completed_requests = DesignRequest.objects.filter(status='completed').order_by('-created_at')[:4]
 
-    # Считаем количество заявок в статусе 'Принято в работу'
-    in_progress_count = DesignRequest.objects.filter(status='in_progress').count()
-    return render(request, 'studio/main.html', {
+        # Считаем количество заявок в статусе 'Принято в работу'
+        in_progress_count = DesignRequest.objects.filter(status='in_progress').count()
+        return render(request, 'studio/main.html', {
+            'completed_requests': completed_requests,
+            'in_progress_count': in_progress_count,
+        })
+        # Получаем данные для отображения
+    completed_requests = DesignRequest.objects.filter(status='completed').order_by('-created_at')[:1]  # Последний выполненный заказ
+    latest_requests = DesignRequest.objects.all().order_by('-created_at')[:1]  # Последний добавленный заказ
+    most_complex_requests = DesignRequest.objects.all().order_by('-complexity')[:1]  # Самый сложный заказ
+
+    context = {
         'completed_requests': completed_requests,
-        'in_progress_count': in_progress_count,
-    })
+        'latest_requests': latest_requests,
+        'most_complex_requests': most_complex_requests,
+    }
 
+    return render(request, 'studio/admin_main.html', context)
 
 
 
@@ -134,6 +146,7 @@ def view_requests(request):
     status_filter = request.GET.get('status', None)
     sort_complexity = request.GET.get('sort_complexity', 'asc')
 
+    # Фильтруем заявки по пользователю
     requests = DesignRequest.objects.filter(user=request.user)
 
     if status_filter:
@@ -156,4 +169,86 @@ def delete_request(request, request_id):
         return redirect('view_requests')  # Перенаправление на страницу с заявками
 
     return render(request, 'studio/delete_request.html', {'request': request_to_delete})
+
+
+def is_superuser(user):
+    return user.is_superuser
+
+
+@user_passes_test(is_superuser)
+def admin_design_requests(request):
+    design_requests = DesignRequest.objects.all()
+
+    # Фильтрация по статусу
+    status_filter = request.GET.get('status', None)
+    if status_filter:
+        design_requests = design_requests.filter(status=status_filter)
+
+    # Сортировка по сложности
+    sort_complexity = request.GET.get('sort_complexity', 'asc')
+    if sort_complexity == 'desc':
+        design_requests = design_requests.order_by('-complexity')  # От сложной к легкой
+    else:
+        design_requests = design_requests.order_by('complexity')  # От легкой к сложной
+
+    if request.method == 'POST':
+        request_id = request.POST.get('request_id')
+        new_status = request.POST.get('status')
+        category_id = request.POST.get('category_id')
+        design_request = get_object_or_404(DesignRequest, id=request_id)
+        # Обновление статуса и категории
+        if new_status:
+            design_request.status = new_status
+        if category_id:
+            design_request.category_id = category_id
+        design_request.save()
+        return redirect('admin_design_requests')  # Перенаправление обратно на страницу
+
+    categories = Category.objects.all()  # Получение всех категорий для выбора
+    status_choices = DesignRequest.STATUS_CHOICES  # Получение доступных статусов
+    return render(request, 'studio/admin_design_requests.html', {
+        'design_requests': design_requests,
+        'categories': categories,
+        'status_choices': status_choices,
+    })
+
+
+@user_passes_test(is_superuser)
+def admin_categories(request):
+    categories = Category.objects.all()
+    return render(request, 'studio/admin_categories.html', {'categories': categories})
+
+
+@user_passes_test(is_superuser)
+def create_category(request):
+    if request.method == 'POST':
+        form = CategoryForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('admin_categories')
+    else:
+        form = CategoryForm()
+    return render(request, 'studio/category_form.html', {'form': form})
+
+
+@user_passes_test(is_superuser)
+def edit_category(request, category_id):
+    category = get_object_or_404(Category, id=category_id)
+    if request.method == 'POST':
+        form = CategoryForm(request.POST, instance=category)
+        if form.is_valid():
+            form.save()
+            return redirect('admin_categories')
+    else:
+        form = CategoryForm(instance=category)
+    return render(request, 'studio/category_form.html', {'form': form})
+
+
+@user_passes_test(is_superuser)
+def delete_category(request, category_id):
+    category = get_object_or_404(Category, id=category_id)
+    if request.method == 'POST':
+        category.delete()
+        return redirect('admin_categories')
+    return render(request, 'studio/category_confirm_delete.html', {'category': category})
 
