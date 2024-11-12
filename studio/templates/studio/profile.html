@@ -3,8 +3,10 @@
 {% block header %}
 <nav>
     <ul>
-        <li><a href="{% url 'index' %}">Главная</a></li>
+        <li><a href="{% url 'main' %}">Главная</a></li>
         {% if user.is_authenticated %}
+        <li><a href="{% url 'view_requests' %}">Посмотреть заявки</a></li>
+        <li><a href="{% url 'create_request' %}">Создать заявку</a></li>
         <li><a href="{% url 'logout' %}">Выйти</a></li>
         {% else %}
         <li><a href="{% url 'register' %}">Регистрация</a></li>

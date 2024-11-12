@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-
+from django.utils import timezone
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='userprofile')
@@ -13,7 +13,37 @@ class UserProfile(models.Model):
         return f'{self.user} Profile'
 
 
-from django.utils import timezone
+class Category(models.Model):
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
+
+
+class DesignRequest(models.Model):
+    STATUS_CHOICES = [
+        ('new', 'Новая'),
+        ('in_progress', 'Принято в работу'),
+        ('completed', 'Выполнено'),
+    ]
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='design_requests')
+    title = models.CharField(max_length=100)
+    description = models.TextField()
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    photo = models.ImageField(upload_to='design_photos/')
+    created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='new')
+    comment = models.TextField(blank=True, null=True)
+    complexity = models.IntegerField(default=0)  # Поле для сложности заявки
+
+    def save(self, *args, **kwargs):
+        # Вычисляем сложность на основе длины описания
+        self.complexity = len(self.description)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.title
+
 
 class LoginAttempt(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)

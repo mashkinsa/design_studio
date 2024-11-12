@@ -1,12 +1,9 @@
-from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
-from django.db.models import Sum
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import HttpResponseNotFound
-from .forms import LoginForm, RegistrationForm
-from .models import UserProfile
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import DesignRequest, Category, UserProfile
+from .forms import DesignRequestForm, LoginForm, RegistrationForm, CategoryForm
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
@@ -16,15 +13,30 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 from datetime import timedelta
 
+
 def index(request):
     return render(request, 'studio/index.html')
+
+
+def main(request):
+    # Получаем 4 последние выполненные заявки
+    completed_requests = DesignRequest.objects.filter(status='completed').order_by('-created_at')[:4]
+
+    # Считаем количество заявок в статусе 'Принято в работу'
+    in_progress_count = DesignRequest.objects.filter(status='in_progress').count()
+    return render(request, 'studio/main.html', {
+        'completed_requests': completed_requests,
+        'in_progress_count': in_progress_count,
+    })
+
+
 
 
 @login_required
 def logout_view(request):
     logout(request)
     print("Вы вышли из системы!")
-    return redirect('index')
+    return redirect('main')
 
 
 def register(request):
@@ -45,15 +57,6 @@ def register(request):
     return render(request, 'studio/register.html', {'form': form})
 
 
-from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login
-from django.contrib import messages
-from .forms import LoginForm
-from .models import LoginAttempt
-from django.contrib.auth.models import User
-from django.utils import timezone
-from datetime import timedelta
-
 def login_view(request):
     form = LoginForm(request, data=request.POST or None)
     is_locked = False
@@ -73,7 +76,7 @@ def login_view(request):
             # Проверяем, если пользователь заблокирован
             if login_attempt.attempts >= 2 and timezone.now() < login_attempt.timestamp + timedelta(seconds=5):
                 is_locked = True  # Устанавливаем флаг блокировки
-                messages.error(request, "Вы заблокированы на 5 секунд после 3 неудачных попыток входа.")
+                messages.error(request, "Вы заблокированы на 5 минут после 3 неудачных попыток входа.")
             else:
                 # Аутентификация пользователя
                 user = authenticate(request, username=username, password=password)
@@ -84,7 +87,7 @@ def login_view(request):
                     login_attempt.attempts = 0  # Сбрасываем попытки
                     login_attempt.timestamp = timezone.now()  # Обновляем время последней попытки
                     login_attempt.save()
-                    return redirect('index')
+                    return redirect('main')
                 else:
                     # Неудачная попытка
                     login_attempt.attempts += 1
@@ -103,8 +106,6 @@ def login_view(request):
 
     return render(request, 'studio/login.html', {'form': form, 'login_attempts': attempts, 'is_locked': is_locked})
 
-
-
 @login_required
 def profile(request):
     user = request.user
@@ -115,5 +116,44 @@ def page_not_found(request, exception):
     return HttpResponseNotFound("<h1> Страница не найдена </h1>")
 
 
+@login_required
+def create_request(request):
+    if request.method == 'POST':
+        form = DesignRequestForm(request.POST, request.FILES)
+        if form.is_valid():
+            design_request = form.save(commit=False)
+            design_request.user = request.user  # Устанавливаем текущего пользователя
+            design_request.save()
+            return redirect('view_requests')
+    else:
+        form = DesignRequestForm()
+    return render(request, 'studio/create_request.html', {'form': form})
 
+
+def view_requests(request):
+    status_filter = request.GET.get('status', None)
+    sort_complexity = request.GET.get('sort_complexity', 'asc')
+
+    requests = DesignRequest.objects.filter(user=request.user)
+
+    if status_filter:
+        requests = requests.filter(status=status_filter)
+
+    # Сортировка по сложности
+    if sort_complexity == 'desc':
+        requests = requests.order_by('-complexity')  # От сложной к легкой
+    else:
+        requests = requests.order_by('complexity')  # От легкой к сложной
+
+    return render(request, 'studio/view_requests.html', {'requests': requests})
+
+
+def delete_request(request, request_id):
+    request_to_delete = get_object_or_404(DesignRequest, id=request_id)
+
+    if request.method == 'POST':
+        request_to_delete.delete()
+        return redirect('view_requests')  # Перенаправление на страницу с заявками
+
+    return render(request, 'studio/delete_request.html', {'request': request_to_delete})
 

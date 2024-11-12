@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
 import re
+from .models import DesignRequest, Category
 
 
 class RegistrationForm(UserCreationForm):
@@ -46,11 +47,38 @@ class RegistrationForm(UserCreationForm):
         return email
 
 
+class DesignRequestForm(forms.ModelForm):
+    class Meta:
+        model = DesignRequest
+        fields = ['title', 'description', 'category', 'photo']
+
+    def clean_photo(self):
+        photo = self.cleaned_data.get('photo')
+        if photo:
+            if photo.size > 2 * 1024 * 1024:  # 2MB
+                raise forms.ValidationError("Размер фото не должен превышать 2 Мб.")
+            if not photo.name.endswith(('.jpg', '.jpeg', '.png', '.bmp')):
+                raise forms.ValidationError("Фото должно быть в формате jpg, jpeg, png или bmp.")
+        return photo
 
 
+class CategoryForm(forms.ModelForm):
+    class Meta:
+        model = Category
+        fields = ['name']
+
+
+class EditProfileForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ('username', 'email', 'avatar')
+
+    avatar = forms.ImageField(label="Аватар", required=False)
 
 
 class LoginForm(AuthenticationForm):
     pass
 
 
+class DeleteAccountForm(forms.Form):
+    confirm_delete = forms.BooleanField(label='Удалить аккаунт', required=True)
