@@ -1,0 +1,23 @@
+{% extends 'studio/base.html' %}
+{% block title %}Подтверждение удаления{% endblock %}
+{% block header %}
+<nav>
+    <ul>
+        <li><a href="{% url 'main' %}">Главная</a></li>
+        {% if user.is_authenticated %}
+        <li><a href="{% url 'profile' %}">Профиль</a></li>
+        {% else %}
+        <li><a href="{% url 'login' %}">Войти</a></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endblock %}
+{% block content %}
+<h1>Удалить заявку "{{ request.title }}"?</h1>
+<p>Вы уверены, что хотите удалить эту заявку?</p>
+<form method="POST">
+    {% csrf_token %}
+    <button type="submit">Удалить</button>
+    <a href="{% url 'view_requests' %}">Отмена</a>
+</form>
+{% endblock %}

@@ -1,0 +1,36 @@
+body {
+    font-family: Comic Sans, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+header {
+    background-color: #333;
+    color: white;
+    padding: 10px 0;
+}
+header nav ul {
+    list-style-type: none;
+    padding: 0;
+}
+header nav ul li {
+    display: inline;
+    margin-right: 20px;
+}
+header nav ul li a {
+    color: white;
+    text-decoration: none;
+}
+
+.profile-avatar {
+    width: 100px; /* Ширина изображения */
+    height: 100px; /* Высота изображения */
+    border-radius: 75%; /* Круглая форма */
+    object-fit: cover; /* Обрезка изображения для вписывания в круг */
+    border: 2px solid #ddd; /* Обводка вокруг изображения */
+    margin-bottom: 15px; /* Отступ снизу */
+}
+.block-profile {
+    padding: 20px; /* Отступы вокруг блока */
+}
+
+

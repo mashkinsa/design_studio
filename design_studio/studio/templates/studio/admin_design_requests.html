@@ -1,0 +1,91 @@
+{% extends 'studio/base.html' %}
+{% block title %}Admin Design Requests{% endblock %}
+{% block header %}
+<nav>
+    <ul>
+        <li><a href="{% url 'main' %}">Главная</a></li>
+        {% if user.is_authenticated %}
+        <li><a href="{% url 'profile' %}">Профиль</a></li>
+        <li><a href="{% url 'admin_categories' %}">Категории</a></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endblock %}
+{% block content %}
+<h1>Заявки</h1>
+
+<form method="GET" action="{% url 'admin_design_requests' %}">
+    <label for="status">Фильтр по статусу:</label>
+    <select name="status" id="status">
+        <option value="">Все</option>
+        {% for value, label in status_choices %}
+        <option value="{{ value }}" {% if request.GET.status == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
+
+    <label for="sort_complexity">Сортировка по сложности:</label>
+    <select name="sort_complexity" id="sort_complexity">
+        <option value="asc" {% if request.GET.sort_complexity == 'asc' %}selected{% endif %}>От легкой к сложной</option>
+        <option value="desc" {% if request.GET.sort_complexity == 'desc' %}selected{% endif %}>От сложной к легкой</option>
+    </select>
+
+    <button type="submit">Применить фильтры</button>
+</form>
+
+<table>
+    <thead>
+        <tr>
+            <th>Изображение</th>
+            <th>Заголовок</th>
+            <th style="width: 200px;">Описание</th>  <!-- Ограничение ширины столбца описания -->
+            <th>Сложность</th> <!-- Столбец сложности перемещен -->
+            <th>Создано</th>
+            <th>Статус</th>
+            <th>Категория</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for request in design_requests %}
+        <tr>
+            <td>
+                {% if request.photo %}
+                <img src="{{ request.photo.url }}" alt="Фото заявки" style="max-width: 200px; max-height: 200px;">
+                {% else %}
+                <span>No Image</span>
+                {% endif %}
+            </td>
+            <td>{{ request.title }}</td>
+            <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: normal;">{{ request.description }}</td>
+            <td>{{ request.complexity }}</td> <!-- Отображение сложности -->
+            <td>{{ request.created_at }}</td>
+            <td>
+                <form method="POST" style="display:inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="request_id" value="{{ request.id }}">
+                    <select name="status">
+                        <option value="">Выберите статус</option>
+                        {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if value == request.status %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+            </td>
+            <td>
+                    <select name="category_id">
+                        <option value="">Выберите категорию</option>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}" {% if category.id == request.category.id %}selected{% endif %}>{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit">Обновить</button>
+                </form>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="7">Заявок не найдено.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
+
