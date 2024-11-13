@@ -1,0 +1,73 @@
+{% extends 'studio/base.html' %}
+{% block header %}
+<nav>
+    <ul>
+        <li><a href="{% url 'main' %}">Главная</a></li>
+        {% if user.is_authenticated %}
+        <li><a href="{% url 'profile' %}">Профиль</a></li>
+        <li><a href="{% url 'admin_design_requests' %}">АдминПанель</a></li>
+        {% else %}
+        <li><a href="{% url 'register' %}">Регистрация</a></li>
+        <li><a href="{% url 'login' %}">Войти</a></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endblock %}
+{% block content %}
+<h1>Информация о заказах</h1>
+<table style="width: 100%; border-collapse: collapse;">
+    <tr>
+        <th>Последний выполненный заказ</th>
+        <th>Последний добавленный заказ</th>
+        <th>Самый сложный заказ</th>
+    </tr>
+    <tr>
+        <td style="padding: 10px; border: 1px solid #ccc;">
+            {% if completed_requests %}
+            <strong>Название:</strong> {{ completed_requests.0.title }}<br>
+            <strong>Категория:</strong> {{ completed_requests.0.category }}<br>
+            <strong>Фото:</strong>
+            {% if completed_requests.0.photo %}
+            <br>
+            <img src="{{ completed_requests.0.photo.url }}" alt="Фото заявки" style="max-width: 100px; max-height: 100px;">
+            {% else %}
+            Нет фото
+            {% endif %}
+            {% else %}
+            Нет выполненных заказов
+            {% endif %}
+        </td>
+        <td style="padding: 10px; border: 1px solid #ccc;">
+            {% if latest_requests %}
+            <strong>Название:</strong> {{ latest_requests.0.title }}<br>
+            <strong>Категория:</strong> {{ latest_requests.0.category }}<br>
+            <strong>Фото:</strong>
+            {% if latest_requests.0.photo %}
+            <br>
+            <img src="{{ latest_requests.0.photo.url }}" alt="Фото заявки" style="max-width: 100px; max-height: 100px;">
+            {% else %}
+            Нет фото
+            {% endif %}
+            {% else %}
+            Нет добавленных заказов
+            {% endif %}
+        </td>
+        <td style="padding: 10px; border: 1px solid #ccc;">
+            {% if most_complex_requests %}
+            <strong>Название:</strong> {{ most_complex_requests.0.title }}<br>
+            <strong>Сложность:</strong> {{ most_complex_requests.0.complexity }}<br>
+            <strong>Категория:</strong> {{ most_complex_requests.0.category }}<br>
+            <strong>Фото:</strong>
+            {% if most_complex_requests.0.photo %}
+            <br>
+            <img src="{{ most_complex_requests.0.photo.url }}" alt="Фото заявки" style="max-width: 100px; max-height: 100px;">
+            {% else %}
+            Нет фото
+            {% endif %}
+            {% else %}
+            Нет сложных заказов
+            {% endif %}
+        </td>
+    </tr>
+</table>
+{% endblock %}

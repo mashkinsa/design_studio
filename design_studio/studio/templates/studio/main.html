@@ -1,0 +1,50 @@
+{% extends 'studio/base.html' %}
+{% block header %}
+<nav>
+    <ul>
+        <li><a href="{% url 'main' %}">Главная</a></li>
+        {% if user.is_authenticated %}
+        <li><a href="{% url 'profile' %}">Профиль</a></li>
+        {% else %}
+        <li><a href="{% url 'register' %}">Регистрация</a></li>
+        <li><a href="{% url 'login' %}">Войти</a></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endblock %}
+{% block content %}
+<h1>Главная страница</h1>
+<h2>Последние выполненные заявки</h2>
+<table>
+    {% for request in completed_requests %}
+    <tr>
+        <td>Временная метка:</td>
+        <td>{{ request.created_at }}</td>
+    </tr>
+    <tr>
+        <td>Название:</td>
+        <td>{{ request.title }}</td>
+    </tr>
+    <tr>
+        <td>Категория:</td>
+        <td>{{ request.category }}</td>
+    </tr>
+    <tr>
+        <td>Фото:</td>
+        <td>
+            {% if request.photo %}
+            <img src="{{ request.photo.url }}" alt="Фото заявки" style="max-width: 200px; max-height: 200px;">
+            {% else %}
+            Нет фото
+            {% endif %}
+        </td>
+    </tr>
+    <tr>
+        <td colspan="2">
+            <hr>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+<h3>Количество заявок в статусе "Принято в работу": {{ in_progress_count }}</h3>
+{% endblock %}
