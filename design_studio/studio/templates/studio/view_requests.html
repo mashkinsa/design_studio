@@ -1,0 +1,78 @@
+{% extends 'studio/base.html' %}
+
+{% block header %}
+<nav>
+    <ul>
+        <li><a href="{% url 'main' %}">Главная</a></li>
+        {% if user.is_authenticated %}
+        <li><a href="{% url 'profile' %}">Профиль</a></li>
+        {% else %}
+        <li><a href="{% url 'login' %}">Войти</a></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endblock %}
+
+{% block content %}
+<h2>Мои заявки</h2>
+<form method="GET" action="{% url 'view_requests' %}">
+    <label for="status">Фильтр по статусу:</label>
+    <select name="status" id="status">
+        <option value="">Все</option>
+        <option value="new" {% if request.GET.status == 'new' %}selected{% endif %}>Новая</option>
+        <option value="in_progress" {% if request.GET.status == 'in_progress' %}selected{% endif %}>Принято в работу</option>
+        <option value="completed" {% if request.GET.status == 'completed' %}selected{% endif %}>Выполнена</option>
+    </select>
+    <label for="sort_complexity">Сортировка по сложности:</label>
+    <select name="sort_complexity" id="sort_complexity">
+        <option value="asc" {% if request.GET.sort_complexity == 'asc' %}selected{% endif %}>От легкой к сложной</option>
+        <option value="desc" {% if request.GET.sort_complexity == 'desc' %}selected{% endif %}>От сложной к легкой</option>
+    </select>
+
+    <button type="submit">Применить фильтры</button>
+</form>
+
+<table>
+    {% for request in requests %}
+<tr>
+    <td>Временная метка:</td>
+    <td>{{ request.created_at }}</td>
+</tr>
+<tr>
+    <td>Название заявки:</td>
+    <td>{{ request.title }}</td>
+</tr>
+<tr>
+    <td>Описание:</td>
+    <td>{{ request.description }}</td>
+</tr>
+<tr>
+    <td>Категория:</td>
+    <td>{{ request.category }}</td>
+</tr>
+<tr>
+    <td>Статус:</td>
+    <td>{{ request.get_status_display }}</td>
+</tr>
+<tr>
+    <td>Фото:</td>
+    <td>
+        {% if request.photo %}
+            <img src="{{ request.photo.url }}" alt="Фото заявки" style="max-width: 200px; max-height: 200px;">
+        {% else %}
+            Нет фото
+        {% endif %}
+    </td>
+</tr>
+<tr>
+    <td>Действия</td>
+    <td>
+        <a href="{% url 'delete_request' request.id %}">Удалить</a>
+    </td>
+</tr>
+<tr>
+    <td colspan="2"><hr></td>
+</tr>
+{% endfor %}
+</table>
+{% endblock %}

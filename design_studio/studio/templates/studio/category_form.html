@@ -1,0 +1,22 @@
+{% extends 'studio/base.html' %}
+{% block title %}{{ form.instance.id|yesno:"Редактировать категорию,Создать категорию" }}{% endblock %}
+{% block header %}
+<nav>
+    <ul>
+        <li><a href="{% url 'main' %}">Главная</a></li>
+        {% if user.is_authenticated %}
+        <li><a href="{% url 'admin_design_requests' %}">АдминПанель</a></li>
+        <li><a href="{% url 'admin_categories' %}">Категории</a></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endblock %}
+{% block content %}
+<h1>{{ form.instance.id|yesno:"Редактировать категорию,Создать категорию" }}</h1>
+<form method="POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Сохранить</button>
+</form>
+<a href="{% url 'admin_categories' %}">Назад</a>
+{% endblock %}

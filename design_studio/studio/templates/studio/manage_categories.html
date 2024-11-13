@@ -1,0 +1,21 @@
+{% extends 'studio/base.html' %}
+{% block content %}
+<h2>Управление категориями</h2>
+<form method="POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Добавить категорию</button>
+</form>
+<h3>Существующие категории</h3>
+<ul>
+    {% for category in categories %}
+    <li>
+        {{ category.name }}
+        <form action="{% url 'delete_category' category.id %}" method="POST" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit">Удалить</button>
+        </form>
+    </li>
+    {% endfor %}
+</ul>
+{% endblock %}
